@@ -156,7 +156,7 @@ for i in range(len(links)):
     # Finally, we navigate backwards
     browser.back()
 # close the browser
-browser.quit()
+# browser.quit()
 
 hemisphere_image_urls
 
