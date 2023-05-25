@@ -14,22 +14,28 @@ mongo = PyMongo(app)
 @app.route("/")
 def home():
 
-    mars_data_info = mongo.db.mars_db.find_one()
+    mars_data_info = mongo.db.mars_db.find_one({"featured_image": 1, 
+                                                "hemisphere_image": 1,
+
+"paragraph": 1,
+
+"title": 1,
+})
 
     return render_template("index.html", mars=mars_data_info)
     # return render_template("index.html", mars=mars_collect)
 
-    @app.route("/scrape")
-    def scrape():
+@app.route("/scrape")
+def scrape():
 
-        # Run the scrape function
-        mars_data = scrape_mars.scrape_info()
+    # Run the scrape function
+    mars_data = scrape_mars.scrape_info()
 
-    # Update the Mongo database using update and upsert=True
-        mongo.db.mars_db.update_one({}, {"$set": mars_data}, upsert=True)
+# Update the Mongo database using update and upsert=True
+    mongo.db.mars_db.update_one({}, {"$set": mars_data}, upsert=True)
 
-    # Redirect back to home page
-        return redirect("/")
+# Redirect back to home page
+    return redirect("/")
 
 if __name__ == '__main__':
-        app.run(debug=True)
+        app.run()

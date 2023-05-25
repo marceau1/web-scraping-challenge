@@ -6,170 +6,176 @@ from splinter import Browser
 import requests 
 import time
 
-executable_path = {'executable_path': ChromeDriverManager().install()}
-browser = Browser('chrome', **executable_path, headless=False)
+def scrape_info():
+        
 
-url = 'https://redplanetscience.com'
-browser.visit(url)
 
-#create the beautiful soup object to parse the webpage
+    executable_path = {'executable_path': ChromeDriverManager().install()}
+    browser = Browser('chrome', **executable_path, headless=False)
 
-html = browser.html
-soup = BeautifulSoup(html, 'html.parser')
+    url = 'https://redplanetscience.com'
+    browser.visit(url)
 
-print(soup)
+    #create the beautiful soup object to parse the webpage
 
-# look for the first article of the webpage 
+    html = browser.html
+    soup = BeautifulSoup(html, 'html.parser')
 
-article = soup.find('div', class_='list_text')
+    print(soup)
 
-print(article)
+    # look for the first article of the webpage 
 
-#find the title of the article
+    article = soup.find('div', class_='list_text')
 
-title_article = article.find('div', class_= 'content_title').text
+    print(article)
 
-print (title_article)
+    # find the title of the article
+    # try:
+    title_article = article.find('div', class_= 'content_title').get_text()
+    # except AttributeError:
+        # title_article = None
+    print (title_article)
 
-#find the article text
+    #find the article text
+    # try: 
+    paragraph = article.find('div', class_ = 'article_teaser_body').text
+    # except AttributeError:
+    #  paragraph = None
+    print(paragraph)
 
-paragraph = article.find('div', class_ = 'article_teaser_body').text
+    # url for the mars facts page
 
-print(paragraph)
+    url_mars_facts = 'https://galaxyfacts-mars.com'
 
-# url for the mars facts page
+    # reading the html 
 
-url_mars_facts = 'https://galaxyfacts-mars.com'
+    mars_facts = pd.read_html(url_mars_facts)
+    mars_facts
 
-# reading the html 
+    # getting the first item from the list mars_facts
 
-mars_facts = pd.read_html(url_mars_facts)
-mars_facts
+    mars_facts_df = pd.DataFrame(mars_facts[0])
 
-# getting the first item from the list mars_facts
+    mars_facts_df
 
-mars_facts_df = pd.DataFrame(mars_facts[0])
+    # assigning the first row of the df as column labels for the DataFrame.
 
-mars_facts_df
+    mars_facts_df.columns = mars_facts_df.loc[0]
 
-# assigning the first row of the df as column labels for the DataFrame.
+    mars_facts_df.columns 
 
-mars_facts_df.columns = mars_facts_df.loc[0]
+    # setting the index 
 
-mars_facts_df.columns 
+    mars_facts_df.set_index('Mars - Earth Comparison', inplace=True)
 
-# setting the index 
+    mars_facts_df
 
-mars_facts_df.set_index('Mars - Earth Comparison', inplace=True)
+    # drop the not needed column
 
-mars_facts_df
+    mars_facts_df.drop('Mars - Earth Comparison', inplace=True)
+    mars_facts_df
 
-# drop the not needed column
+    # save the mars_facts_df to html
 
-mars_facts_df.drop('Mars - Earth Comparison', inplace=True)
-mars_facts_df
+    mars_facts_df.to_html('mars_facts_table.html')
 
-# save the mars_facts_df to html
+    #navigate to the main page
 
-mars_facts_df.to_html('mars_facts_table.html')
+    url_images = 'https://spaceimages-mars.com/'
 
-#navigate to the main page
+    browser.visit(url_images)
 
-url_images = 'https://spaceimages-mars.com/'
+    # find the all images button then click on
 
-browser.visit(url_images)
+    browser.find_by_text(' FULL IMAGE').first.click()
 
-# find the all images button then click on
+    img = browser.find_by_css('img.fancybox-image')
 
-browser.find_by_text(' FULL IMAGE').first.click()
+    print(img)
 
-img = browser.find_by_css('img.fancybox-image')
+    #find the url image 
 
-print(img)
+    featured_image_url = img['src']
 
-#find the url image 
+    featured_image_url
 
-featured_image_url = img['src']
+    #Mars Hemispheres
 
-featured_image_url
+    #main page navigation
 
-#Mars Hemispheres
+    hemisphere_page = 'https://marshemispheres.com'
 
-#main page navigation
+    browser.visit(hemisphere_page)
 
-hemisphere_page = 'https://marshemispheres.com'
+    #option1
 
-browser.visit(hemisphere_page)
+    html = browser.html
+    soup = BeautifulSoup(html, 'html.parser')
 
-#option1
+    items = soup.find_all('div', class_ = 'item')
 
-html = browser.html
-soup = BeautifulSoup(html, 'html.parser')
+    #create a beautifulSoup object to access to hemisphere webpage
+    hemisphere_title_url = []
+    # loop throup each item
+    for item in items:
+    # get the title for the webpage
+        title = item.find('h3').text
+    # find the url for the small resolution image
+        image = item.find('img', class_='thumb')['src']
+    #     append the dict to the list
+        
+        hemisphere_title_url.append({'Title':title, 'Image_url':image})
 
-items = soup.find_all('div', class_ = 'item')
+    print(hemisphere_title_url)
 
-#create a beautifulSoup object to access to hemisphere webpage
-hemisphere_title_url = []
-# loop throup each item
-for item in items:
-# get the title for the webpage
-    title = item.find('h3').text
-# find the url for the small resolution image
-    image = item.find('img', class_='thumb')['src']
-#     append the dict to the list
+    # option 2 full resolution when clich on the  image
+
+    # find all items in hemisphere webpage
+
+    items = soup.find_all('div', class_= item)
+
+    browser.visit('https://marshemispheres.com')
+
+    # Create a list to hold the images and titles.
+    hemisphere_image_urls = []
+
+    # Get a list of all of the hemispheres
+    links = browser.find_by_css('a.product-item img')
+
+
+    for i in range(len(links)):
+        hemisphere = {}
+        
+        # We have to find the elements on each loop to avoid a stale element exception
+        browser.find_by_css('a.product-item img')[i].click()
+        
+        # Next, we find the Sample image anchor tag and extract the href
+        sample_elem = browser.links.find_by_text('Sample').first
+        hemisphere['img_url'] = sample_elem['href']
+        
+        # Get Hemisphere title
+        hemisphere['title'] = browser.find_by_css('h2.title').text
+        
+        # Append hemisphere object to list
+        hemisphere_image_urls.append(hemisphere)
+        
+        # Finally, we navigate backwards
+        browser.back()
+    # close the browser
+    # browser.quit()
+
+    hemisphere_image_urls
+
+    # create a dictionnairy call marcs_info
+
+    mars_info_dict = {
+        
+        "title": title_article,
+        "paragraph":paragraph,
+        "featured_image":featured_image_url,
+        "mars_facts":mars_facts_df,
+        "hemisphere_image":hemisphere_image_urls
+    }
+
+    return mars_info_dict
     
-    hemisphere_title_url.append({'Title':title, 'Image_url':image})
-
-print(hemisphere_title_url)
-
-# option 2 full resolution when clich on the  image
-
-# find all items in hemisphere webpage
-
-items = soup.find_all('div', class_= item)
-
-browser.visit('https://marshemispheres.com')
-
-# Create a list to hold the images and titles.
-hemisphere_image_urls = []
-
-# Get a list of all of the hemispheres
-links = browser.find_by_css('a.product-item img')
-
-
-for i in range(len(links)):
-    hemisphere = {}
-    
-    # We have to find the elements on each loop to avoid a stale element exception
-    browser.find_by_css('a.product-item img')[i].click()
-    
-    # Next, we find the Sample image anchor tag and extract the href
-    sample_elem = browser.links.find_by_text('Sample').first
-    hemisphere['img_url'] = sample_elem['href']
-    
-    # Get Hemisphere title
-    hemisphere['title'] = browser.find_by_css('h2.title').text
-    
-    # Append hemisphere object to list
-    hemisphere_image_urls.append(hemisphere)
-    
-    # Finally, we navigate backwards
-    browser.back()
-# close the browser
-# browser.quit()
-
-hemisphere_image_urls
-
-# create a dictionnairy call marcs_info
-
-mars_info_dict = {
-    
-    "title": title_article,
-    "paragraph":paragraph,
-    "featured_image":featured_image_url,
-    "mars_facts":mars_facts_df,
-    "hemisphere_image":hemisphere_image_urls
-}
-
-
-print(mars_info_dict)
